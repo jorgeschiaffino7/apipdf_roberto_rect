@@ -8,16 +8,17 @@ class PresupuestoGenerator {
 
   async generatePDF() {
     return new Promise((resolve, reject) => {
-      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      const doc = new PDFDocument({
+        size: 'A4',
+        margin: 50
+      });
 
       const chunks = [];
       doc.on('data', chunk => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
 
-      // Agregar logo
-      if (this.logoPath) {
-        doc.image(this.logoPath, 50, 50, { width: 150 });
-      }
+      // Crear el encabezado con el logo
+      this.addHeader(doc);
 
       // Título principal
       doc.moveDown();
@@ -37,6 +38,7 @@ class PresupuestoGenerator {
       this.addSection(doc, 'Repuestos Necesarios', this.data.repuestos);
       this.addSection(doc, 'Sugerencias', this.data.sugerencias);
 
+      // Pie de página
       doc.moveDown(2);
       doc.fontSize(10).text('Muchas gracias por su preferencia', { align: 'center' });
 
@@ -44,12 +46,24 @@ class PresupuestoGenerator {
     });
   }
 
+  addHeader(doc) {
+    // Agregar el logo en la parte superior como encabezado
+    if (this.logoPath) {
+      doc.image(this.logoPath, 50, 20, { width: 150 });
+    }
+    // Línea separadora debajo del logo
+    doc.moveTo(50, 80).lineTo(545, 80).stroke();
+  }
+
   addSection(doc, title, content) {
     doc.fontSize(14).text(title, { underline: true });
-    doc.fontSize(12).moveDown(0.5);
-    
+    doc.fontSize(12);
+    doc.moveDown(0.5);
+
     if (Array.isArray(content)) {
-      content.forEach(item => doc.text(`• ${item}`));
+      content.forEach(item => {
+        doc.text(`• ${item}`);
+      });
     } else {
       doc.text(content);
     }
